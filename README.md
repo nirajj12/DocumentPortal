@@ -23,16 +23,16 @@ pip install -r requirements.txt
 
 # Initialize Git
 git init
-
+```
 # Stage all files
 git add .
 
 # Commit changes
 git commit -m "<write your commit message>"
-
+```
 # Push to remote (after adding remote origin)
 git push
-
+```
 # Cloning the repository
 git clone https://github.com/nirajj12/DocumentPortal.git
 ```
