@@ -4,6 +4,8 @@ ipykernel
 langchain-groq
 langchain-openai
 langchain_google_genai
+langchain-huggingface
+sentence_transformers
 
 langchain_community
 pypdf
