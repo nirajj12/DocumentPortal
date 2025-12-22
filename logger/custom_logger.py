@@ -51,5 +51,5 @@ if __name__ == "__main__":
     logger=CustomLogger()
     logger=logger.get_logger(__file__)
     logger.info("User uploaded a file", user_id=123, filename="report.pdf")
-    logger.error("Failed to process PDF", error="File not found", user_id=123)
+ #   logger.error("Failed to process PDF", error="File not found", user_id=123)
 
