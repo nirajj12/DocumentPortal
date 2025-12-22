@@ -1,7 +1,7 @@
 import logging
 import os
 from datetime import datetime
-
+import structlog
 
 class CustomLogger:
     def __init__(self,logs_dir="logs"):
@@ -9,21 +9,47 @@ class CustomLogger:
         os.makedirs(self.logs_dir,exist_ok=True)
 
         log_file=f"{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}.log"
-        log_file_path=os.path.join(self.logs_dir,log_file)
+        self.log_file_path=os.path.join(self.logs_dir,log_file)
 
-        logging.basicConfig(
-            filename=log_file_path,
-            format="[%(asctime)s] %(levelname)s %(name)s (line:%(lineno)d) - %(message)s",
-            level=logging.INFO,
-        )
+        
 
     def get_logger(self, name:__file__):
-        return logging.getLogger(os.path.basename(name))
+        logger_name=os.path.basename(name)
+
+        file_handler=logging.FileHandler(self.log_file_path)
+        file_handler.setLevel(logging.INFO)
+        file_handler.setFormatter(
+            logging.Formatter("%(message)s"))
+        
+        console_handler=logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+        console_handler.setFormatter(
+            logging.Formatter("%(message)s"))
+        
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(message)s",
+            handlers=[file_handler,console_handler]
+        )
+
+        structlog.configure(
+            processors=[
+                structlog.processors.TimeStamper(fmt="iso",utc=True, key="timestamp"),
+                structlog.processors.add_log_level,
+                structlog.processors.EventRenamer(to="event"),
+                structlog.processors.JSONRenderer()
+            ],
+            logger_factory=structlog.stdlib.LoggerFactory(),
+            cache_logger_on_first_use=True
+        )
+            
+
+        return structlog.getLogger(logger_name)
 
 if __name__ == "__main__":
 
     logger=CustomLogger()
     logger=logger.get_logger(__file__)
-    logger.info("Custom logger initialized")
-
+    logger.info("User uploaded a file", user_id=123, filename="report.pdf")
+    logger.error("Failed to process PDF", error="File not found", user_id=123)
 
