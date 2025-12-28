@@ -78,7 +78,7 @@ class DocumentIngestion:
     def combine_documents(self)-> str:
         try:
             content_dict={}
-            doc_parts={}
+            doc_parts=[]
             for filename in sorted(self.base_dir.iterdir()):
                 if filename.is_file() and filename.suffix.lower() == '.pdf':
                     content_dict[filename.name]=self.read_pdf(filename)      

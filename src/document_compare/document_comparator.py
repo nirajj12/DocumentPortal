@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 from logger.custom_logger import CustomLogger
 from exception.custom_exception import DocumentPortalException
-from models.models import *''
+from models.models import *
 from utils.model_loader import ModelLoader
 from prompt.prompt_library import PROMPT_REGISTRY
 from langchain_core.output_parsers import JsonOutputParser
@@ -17,7 +17,7 @@ class DocumentComparator:
         self.loader=ModelLoader()
         self.llm=self.loader.load_llm()
         self.parser=JsonOutputParser(pydantic_object=SummaryResponse)
-        self.prompt=PROMPT_REGISTRY["document_comparator"]
+        self.prompt=PROMPT_REGISTRY["document_comparison"]
         self.chain=self.prompt | self.llm | self.parser
         self.log.info("DocumentComparator initialized successfully")
 
@@ -28,11 +28,13 @@ class DocumentComparator:
         try:
             inputs = {
                 "combined_docs": combined_docs,
-                "format_instruction": self.parser.get_format_instructions()
+                "format_instructions": self.parser.get_format_instructions()
             }
 
             self.log.info("Invoking document comparison LLM chain")
             response = self.chain.invoke(inputs)
+            df=self.format_response(response)
+            return df
         except Exception as e:
             self.log.error(f"Error in compare_documents: {e}")
             raise DocumentPortalException("An Error occurred in comparing documents",sys)
