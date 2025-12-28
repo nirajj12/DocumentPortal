@@ -6,7 +6,7 @@ from exception.custom_exception import DocumentPortalException
 
 
 class DocumentIngestion:
-    def __init__(self,base_dir):
+    def __init__(self,base_dir:str="data/document_compare"):
         self.log= CustomLogger().get_logger(__name__)
         self.base_dir=Path(base_dir)
         self.base_dir.mkdir(parents=True,exist_ok=True)
@@ -16,17 +16,41 @@ class DocumentIngestion:
         Deletes an existing file at the specified path.
         """
         try:
-            pass
+            if self.base_dir.exists() and self.base_dir.is_dir():
+                for file in self.base_dir.iterdir():
+                    if file.is_file():
+                        file.unlink()
+                        self.log.info("File Deleted",path=str(file))
+                self.log.info("Directory cleaned",directory=str(self.base_dir))
         except Exception as e:
             self.log.error(f"Error deleting existing file: {e}")
             raise DocumentPortalException("An Error occurred while deleting existing file",sys)
 
-    def save_uploaded_file(self):
+    def save_uploaded_file(self,reference_file,actual_file):
         """
         Saves Uploaded files to a specific directory.
         """
         try:
-            pass
+            self.delete_existing_file()
+            self.log.info(f"Existing file deleted successfully")
+            ref_path=self.base_dir/reference_file.name
+            act_path=self.base_dir/actual_file.name
+
+            if not reference_file.name.lower().endswith('.pdf') or not actual_file.name.lower().endswith('.pdf'):
+                raise ValueError("Invalid file format. Only PDF files are allowed.")
+            
+            with open(ref_path,"wb") as f:
+                f.write(reference_file.getbuffer())
+
+            with open(act_path,"wb") as f:    
+                f.write(actual_file.getbuffer())
+
+            self.log.info("Files saved",reference=str(ref_path),actual=str(act_path))
+            return ref_path,act_path
+
+
+
+
         except Exception as e:
             self.log.error(f"Error saving uploaded file: {e}")
             raise DocumentPortalException("An Error occurred while saving uploaded file",sys)
@@ -50,3 +74,23 @@ class DocumentIngestion:
         except Exception as e:
             self.log.error(f"Error reading PDF: {e}")
             raise DocumentPortalException("An Error occurred while reading PDF",sys)
+        
+    def combine_documents(self)-> str:
+        try:
+            content_dict={}
+            doc_parts={}
+            for filename in sorted(self.base_dir.iterdir()):
+                if filename.is_file() and filename.suffix.lower() == '.pdf':
+                    content_dict[filename.name]=self.read_pdf(filename)      
+
+            for filename,content in content_dict.items():
+                doc_parts.append(f"Document:{filename}\n{content}")
+
+            combined_text="\n\n".join(doc_parts)            
+            self.log.info("Documents combined successfully",count=len(doc_parts))
+            return combined_text
+
+        except Exception as e:
+            self.log.error(f"Error combining documents: {e}")
+            raise DocumentPortalException("An Error occurred while combining documents",sys)            
+                                    
