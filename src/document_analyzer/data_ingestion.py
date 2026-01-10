@@ -14,7 +14,7 @@ class DocumentHandler:
                 "DATA_STORAGE_PATH", 
                 os.path.join(os.getcwd(), "data", "document_analysis")
                 )
-            self.session_id=session_id or f"session_{datetime.now().strftime('% Y%m%d_%H%M%S')}_{(uuid.uuid4()).hex[:8]}"
+            self.session_id=session_id or f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{(uuid.uuid4()).hex[:8]}"
             self.session_path = os.path.join(self.data_dir, self.session_id)
             os.makedirs(self.session_path, exist_ok=True)
 
