@@ -16,6 +16,8 @@ pymupdf
 
 
 pandas
-
-
+streamlit
+langchain-core[tracing]
+pytest
 -e .
+langchain 
