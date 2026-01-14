@@ -49,8 +49,8 @@ class DocumentIngestor:
                 if ext not in self.SUPPORTED_FILE_TYPES:
                     self.log.warning("Unsupported file type", file_name=uploaded_file.name,session_id=self.session_id)
                     continue
-                original_name = Path(uploaded_file.name).name
-                temp_path= self.session_temp_dir / original_name
+                unique_filename=f"{uuid.uuid4().hex[:8]}{ext}"
+                temp_path= self.session_temp_dir / unique_filename
                 uploaded_file.seek(0)
                 with open(temp_path,"wb") as f:
                     f.write(uploaded_file.read())
