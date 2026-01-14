@@ -21,3 +21,4 @@ langchain-core[tracing]
 pytest
 -e .
 langchain 
+docx2txt

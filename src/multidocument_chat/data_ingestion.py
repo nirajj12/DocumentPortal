@@ -47,9 +47,11 @@ class DocumentIngestor:
             for uploaded_file in uploaded_files:
                 ext=Path(uploaded_file.name).suffix.lower()
                 if ext not in self.SUPPORTED_FILE_TYPES:
-                    self.log.warning("Unsupported file type", file_name=uploaded_file.name)
+                    self.log.warning("Unsupported file type", file_name=uploaded_file.name,session_id=self.session_id)
                     continue
-                temp_path= self.session_temp_dir / uploaded_file.name
+                original_name = Path(uploaded_file.name).name
+                temp_path= self.session_temp_dir / original_name
+                uploaded_file.seek(0)
                 with open(temp_path,"wb") as f:
                     f.write(uploaded_file.read())
                     self.log.info("File saved for ingestion", file_name=uploaded_file.name, saved_as=str(temp_path),session_id=self.session_id)
@@ -67,11 +69,11 @@ class DocumentIngestor:
                 docs= loader.load()
                 documents.extend(docs)
 
-                if not documents:
-                    raise DocumentPortalException("No valid documents loaded", sys)
+            if not documents:
+                raise DocumentPortalException("No valid documents loaded", sys)
                 
                 self.log.info("Files loaded successfully", total_docs=len(documents), session_id=self.session_id)
-                return self._create_retriever(documents)
+            return self._create_retriever(documents)
 
 
         except Exception as e:

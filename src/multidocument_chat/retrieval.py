@@ -1,11 +1,10 @@
 import os
-from pathlib import Path
 import sys
 from operator import itemgetter
-from typing import List
+from typing import List,Optional
 from langchain_core.messages import BaseMessage
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.runnables import RunnablePassThrough
+from langchain_core.runnables import RunnablePassthrough
 from langchain_community.vectorstores.faiss import FAISS
 from langchain_core.prompts import ChatPromptTemplate
 from utils.model_loader import ModelLoader
@@ -50,8 +49,8 @@ class ConversationalRAG:
             vectorstore= FAISS.load_local(index_path, embeddings,allow_dangerous_deserialization=True)
 
             self.retriever= vectorstore.as_retriever(search_type="similarity",search_kwargs={"k":5})
-            self.log.info("Retriever loaded from FAISS", index_path=index_path, session_id=self.session_id)
             self._build_lcel_chain()
+            self.log.info("Retriever loaded from FAISS", index_path=index_path, session_id=self.session_id)
             return self.retriever
 
 
@@ -108,22 +107,22 @@ class ConversationalRAG:
                 { "input": itemgetter("input"), "chat_history": itemgetter("chat_history") }
                 | self.contextualize_prompt
                 | self.llm
-                | StrOutputParser
+                | StrOutputParser()
             )   
             #2.Retrieve docs for rewritten question 
-            retrieve_docs= self.retriever | self._format_docs
+            retrieve_docs= (question_rewriter |self.retriever | self._format_docs)
             #3.Feed context + original input_chat history into answer prompt
             self.chain= (
                 {
                     "context": retrieve_docs,
                     "input":itemgetter("input"),
-                    chat_history:itemgetter("chat_history")
+                    "chat_history":itemgetter("chat_history")
                 }
                 | self.qa_prompt
                 | self.llm
                 | StrOutputParser()
             )
-            self.log.info("LCEL chain built successfully", session_id=self.session_i  d)
+            self.log.info("LCEL chain built successfully", session_id=self.session_id)
         except Exception as e:    
             self.log.error("Failed to build LCEL chain", error=str(e))
             raise DocumentPortalException("Error building LCEL chain in ConversationalRAG", sys)
