@@ -176,6 +176,3 @@ async def chat_query(
         raise
     except Exception as e:
         raise HTTPException(status_code=500,detail=f"Query failed:{e}")   
-
-    
-     
