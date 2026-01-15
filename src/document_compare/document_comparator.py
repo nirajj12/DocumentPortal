@@ -10,7 +10,7 @@ from prompt.prompt_library import PROMPT_REGISTRY
 from langchain_core.output_parsers import JsonOutputParser
 
 
-class DocumentComparator:
+class DocumentComparatorLLM:
     def __init__(self):
         load_dotenv()
         self.log= CustomLogger().get_logger(__name__)

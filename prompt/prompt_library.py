@@ -2,7 +2,14 @@ from langchain_core.prompts import ChatPromptTemplate,MessagesPlaceholder
 
 document_analysis_prompt=ChatPromptTemplate.from_template("""
 You are a highly capable AI assistant trained to analyze and summarize documents.
-Return only valid JSON matching the exact schema below.
+Your task is to extract structured metadata from the document content below.
+
+IMPORTANT RULES:
+- Extract or infer values wherever reasonably possible.
+- Do NOT return the string "None".
+- If a value cannot be determined, return null.
+- Summary MUST contain at least 3 concise bullet points.
+- Return ONLY valid JSON that strictly follows the schema.
                                         
 {format_instructions}
 
