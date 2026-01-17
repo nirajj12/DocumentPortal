@@ -13,10 +13,13 @@ from src.document_ingestion.data_ingestion import (
     FaissManager
 )
 from src.document_analyzer.data_analysis import DocumentAnalyzer
-from src.document_compare.document_comparator import DocumentComparator
+from src.document_compare.document_comparator import DocumentComparatorLLM
 from src.document_chat.retrieval import ConversationalRAG
 from utils.document_ops import FastAPIFileAdapter,read_pdf_via_handler
 
+
+FAISS_BASE=os.getenv("FAISS_BASE","faiss_index")
+UPLOAD_BASE=os.getenv("UPLOAD_BASE","data")
 app=FastAPI(title="Document Portal API",version="0.1")
 
 app.add_middleware(
@@ -28,8 +31,8 @@ app.add_middleware(
 
 )
 
-app.mount("/static", StaticFiles(directory="../static"), name="static")
-templates= Jinja2Templates(directory="../templates")
+app.mount("/static", StaticFiles(directory="./static"), name="static")
+templates= Jinja2Templates(directory="./templates")
 
 @app.get("/",response_class=HTMLResponse)
 async def serve_ui(request:Request):
@@ -51,23 +54,13 @@ class FastAPIFileAdapter:
         return self._uf.file.read()
 
 
-def _read_pdf_via_handler(handler: DocHandler, path: str) -> str:
-    """
-    Helper function to read PDF using DocHandler.
-    """
-    try:
-        pass
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error reading PDF: {str(e)}"
-        )
+
 @app.post("/analyze")
 async def analyze_document(file:UploadFile = File(...)) -> Any:
     try:
         dh = DocHandler()
         saved_path = dh.save_pdf(FastAPIFileAdapter(file))
-        text = _read_pdf_via_handler(dh, saved_path)
+        text = read_pdf_via_handler(dh, saved_path)
 
         analyzer = DocumentAnalyzer()
         result = analyzer.analyze_document(text)
@@ -90,7 +83,7 @@ async def compare_documents(reference:UploadFile=File(...),actual:UploadFile=Fil
 
         combined_text = dc.combine_documents()
 
-        comp = DocumentComparator()
+        comp = DocumentComparatorLLM()
         df = comp.compare_documents(combined_text)
 
         return {

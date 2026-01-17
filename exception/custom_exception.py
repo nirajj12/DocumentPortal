@@ -2,7 +2,7 @@ import sys
 import traceback
 from logger.custom_logger import CustomLogger
 
-logger=CustomLogger().get_logger("__file__")
+logger=CustomLogger().get_logger(__file__)
 
 class DocumentPortalException(Exception):
     def __init__(self,error_message:str,error_details:sys):
