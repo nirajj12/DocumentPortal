@@ -9,7 +9,8 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from logger.custom_logger import CustomLogger
-from exception.custom_exception import DocumentPortalException
+from exception.custom_exception_archieve import DocumentPortalException
+import json
 
 
 log=CustomLogger().get_logger(__name__)

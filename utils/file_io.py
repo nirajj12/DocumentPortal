@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 import uuid
 from typing import Iterable, List
 from logger.custom_logger import CustomLogger
-from exception.custom_exception import DocumentPortalException
+from exception.custom_exception_archieve import DocumentPortalException
 
 SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt"}
 log=CustomLogger().get_logger(__name__)
