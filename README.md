@@ -65,15 +65,12 @@ LLM (Groq / Gemini)
 
 ```mermaid
 flowchart TD
-    A[Client Upload
-PDF / DOCX / TXT] --> B[FastAPI Endpoint]
-    B --> C[FastAPIFileAdapter]
-    C --> D[File I/O Layer
-(utils.file_io)]
-    D --> E[Session-based Storage
-(data/session_*)]
-    E --> F[Document Loaders
-PDF | DOCX | TXT]
+    A[Client Upload (PDF, DOCX, TXT)] --> B[FastAPI Endpoint]
+    B --> C[FastAPI File Adapter]
+    C --> D[File IO Layer - utils file io]
+    D --> E[Session Based Storage (data session)]
+    E --> F[Document Loaders (PDF, DOCX, TXT)]
+
 ```
 
 ---
@@ -83,14 +80,12 @@ PDF | DOCX | TXT]
 ```mermaid
 flowchart TD
     A[PDF Upload] --> B[Text Extraction]
-    B --> C[Prompt Builder
-(document_analysis)]
-    C --> D[LLM
-Groq / Gemini]
+    B --> C[Prompt Builder (document_analysis)]
+    C --> D[LLM (Groq or Gemini)]
     D --> E[JSON Output Parser]
-    E --> F[Pydantic Validation
-Metadata Model]
+    E --> F[Pydantic Validation (Metadata Model)]
     F --> G[Structured JSON Response]
+
 ```
 
 ---
@@ -115,14 +110,13 @@ with Markers]
 
 ```mermaid
 flowchart TD
-    A[User Uploads Documents] --> B[Chunking
-(size + overlap)]
+    A[User Uploads Documents] --> B[Chunking (size + overlap)]
     B --> C[Embedding Generation]
     C --> D[FAISS Vector Index]
-    D --> E[Retriever
-Top-K]
+    D --> E[Retriever (Top-K)]
     E --> F[Contextual Prompt]
     F --> G[LLM Answer]
+
 ```
 
 ---
@@ -309,8 +303,11 @@ FAISS was selected to avoid **recurring managed‑database costs** while maintai
 This approach prevents **linear cost growth with user scale**, making the system suitable for both startups and enterprise deployments.
 
 
-📁 Project Structure
+---
 
+## 📁 Project Structure
+
+```
 document_portal/
 ├── api/                    # FastAPI application
 ├── src/                    # Core business logic
@@ -332,158 +329,186 @@ document_portal/
 ├── Dockerfile
 ├── requirements.txt
 └── README.md
+```
 
-⚙️ Tech Stack
+---
 
-Backend
+## ⚙️ Tech Stack
 
-FastAPI
+### Backend
 
-LangChain (LCEL)
+* **FastAPI**
+* **LangChain** (LCEL)
+* **FAISS** (Vector DB)
+* **Pydantic**
+* **Structlog**
 
-FAISS (Vector DB)
+### LLMs & Embeddings
 
-Pydantic
+* Groq (LLaMA / OSS models)
+* Google Gemini
+* HuggingFace Sentence Transformers
 
-Structlog
+### DevOps & Cloud
 
-LLMs & Embeddings
+* Docker
+* AWS ECS Fargate
+* AWS ECR
+* AWS Secrets Manager
+* AWS CloudWatch
+* GitHub Actions
 
-Groq (LLaMA / OSS models)
+---
 
-Google Gemini
+## 🔐 Environment Variables
 
-HuggingFace Sentence Transformers
+For **local development**, create a `.env` file:
 
-DevOps & Cloud
-
-Docker
-
-AWS ECS Fargate
-
-AWS ECR
-
-AWS Secrets Manager
-
-AWS CloudWatch
-
-GitHub Actions
-
-🔐 Environment Variables
-
-For local development, create a .env file:
-
+```env
 GROQ_API_KEY=your_groq_key
 GOOGLE_API_KEY=your_google_key
 ENV=local
+```
 
-For production, keys are injected via AWS Secrets Manager as a single JSON secret:
+For **production**, keys are injected via **AWS Secrets Manager** as a single JSON secret:
 
+```json
 {
   "GROQ_API_KEY": "...",
   "GOOGLE_API_KEY": "..."
 }
+```
 
-🧪 Running Locally
+---
 
-1️⃣ Clone Repository
+## 🧪 Running Locally
 
+### 1️⃣ Clone Repository
+
+```bash
 git clone https://github.com/nirajj12/DocumentPortal.git
 cd DocumentPortal
+```
 
-2️⃣ Create Virtual Environment
+### 2️⃣ Create Virtual Environment
 
+```bash
 python -m venv env
 source env/bin/activate  # Linux/Mac
+```
 
-3️⃣ Install Dependencies
+### 3️⃣ Install Dependencies
 
+```bash
 pip install -r requirements.txt
+```
 
-4️⃣ Run FastAPI
+### 4️⃣ Run FastAPI
 
+```bash
 uvicorn api.main:app --reload
+```
 
-5️⃣ Open in Browser
+### 5️⃣ Open in Browser
 
+```
 http://localhost:8000
+```
 
-🐳 Running with Docker
+---
 
+## 🐳 Running with Docker
+
+```bash
 docker build -t document-portal .
 docker run -p 8080:8080 --env-file .env document-portal
+```
 
-🔁 API Endpoints
+---
 
-Health Check
+## 🔁 API Endpoints
 
+### Health Check
+
+```
 GET /health
+```
 
-Document Analysis
+### Document Analysis
 
+```
 POST /analyze
 Form‑Data: file=<PDF>
+```
 
-Document Comparison
+### Document Comparison
 
+```
 POST /compare
 Form‑Data: reference=<PDF>, actual=<PDF>
+```
 
-Build Chat Index
+### Build Chat Index
 
+```
 POST /chat/index
+```
 
-Chat Query
+### Chat Query
 
+```
 POST /chat/query
+```
 
-🧠 Design Principles
+---
 
-Separation of Concerns
+## 🧠 Design Principles
 
-Config‑driven architecture
+* **Separation of Concerns**
+* **Config‑driven architecture**
+* **LLM provider abstraction**
+* **Session‑isolated indexing**
+* **Strict schema validation**
+* **Cloud‑ready logging & secrets**
 
-LLM provider abstraction
+---
 
-Session‑isolated indexing
+## 🚀 CI/CD Pipeline
 
-Strict schema validation
+* **CI**: Runs unit tests on every PR
+* **CD**:
 
-Cloud‑ready logging & secrets
-
-🚀 CI/CD Pipeline
-
-CI: Runs unit tests on every PR
-
-CD:
-
-Build Docker image
-
-Push to Amazon ECR
-
-Deploy to ECS Fargate
+  * Build Docker image
+  * Push to Amazon ECR
+  * Deploy to ECS Fargate
 
 Workflows located in:
 
+```
 .github/workflows/
+```
 
-📌 Use Cases
+---
 
-Enterprise document review
+## 📌 Use Cases
 
-Contract comparison
+* Enterprise document review
+* Contract comparison
+* Regulatory compliance
+* Knowledge‑base chatbots
+* Research document analysis
 
-Regulatory compliance
+---
 
-Knowledge‑base chatbots
+## 🧑‍💻 Author
 
-Research document analysis
+**Niraj Kumar**
+Aspiring  GenAI Engineer
 
-🧑‍💻 Author
+GitHub: [https://github.com/nirajj12](https://github.com/nirajj12)
 
-Niraj Kumar Aspiring  GenAI Engineer
 
-GitHub: https://github.com/nirajj12
 
+---
 
 ⭐ If you found this project useful, consider starring the repository!
