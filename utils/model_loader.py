@@ -14,45 +14,81 @@ from exception.custom_exception import DocumentPortalException
 
 log=CustomLogger().get_logger(__name__)
 
-class ModelLoader:
+
+
+class ApiKeyManager:
+    REQUIRED_KEYS = ["GROQ_API_KEY", "GOOGLE_API_KEY"]
+
     def __init__(self):
-        try:
+        self.api_keys = {}
+        raw = os.getenv("API_KEYS")
+
+        if raw:
+            try:
+                parsed = json.loads(raw)
+                if not isinstance(parsed, dict):
+                    raise ValueError("API_KEYS is not a valid JSON object")
+                self.api_keys = parsed
+                log.info("Loaded API_KEYS from ECS secret")
+            except Exception as e:
+                log.warning("Failed to parse API_KEYS as JSON", error=str(e))
+
+        # Fallback to individual env vars
+        for key in self.REQUIRED_KEYS:
+            if not self.api_keys.get(key):
+                env_val = os.getenv(key)
+                if env_val:
+                    self.api_keys[key] = env_val
+                    log.info(f"Loaded {key} from individual env var")
+
+        # Final check
+        missing = [k for k in self.REQUIRED_KEYS if not self.api_keys.get(k)]
+        if missing:
+            log.error("Missing required API keys", missing_keys=missing)
+            raise DocumentPortalException("Missing API keys", sys)
+
+        log.info("API keys loaded", keys={k: v[:6] + "..." for k, v in self.api_keys.items()})
+
+
+    def get(self, key: str) -> str:
+        val = self.api_keys.get(key)
+        if not val:
+            raise KeyError(f"API key for {key} is missing")
+        return val
+
+
+class ModelLoader:
+    """
+    Loads embedding models and LLMs based on config and environment.
+    """
+
+    def __init__(self):
+        if os.getenv("ENV", "local").lower() != "production":
             load_dotenv()
-            self._validate_env()
-            self.config = load_config()
-            log.info(
-                "configuration loaded successfully",
-                config_keys=list(self.config.keys())
-            )
+            log.info("Running in LOCAL mode: .env loaded")
+        else:
+            log.info("Running in PRODUCTION mode")
 
-        except Exception as e:
-            raise DocumentPortalException(e, sys)
-
-    def _validate_env(self):
-        """
-        validate required environment variables 
-        
-        Ensure API keys exist
-        """
-        
-        required_vars = ["GROQ_API_KEY", "HF_TOKEN", "GOOGLE_API_KEY"]
-        self.api_key = {key:os.getenv(key) for key in required_vars}
-        missing_vars = [key for key, value in self.api_key.items() if not value]
-        if missing_vars:
-            log.error("Missing required environment variables", missing_vars=missing_vars)
-            raise DocumentPortalException(f"Missing required environment variables",sys)
-        log.info("Environment variables validated successfully",available_keys=[k for k in self.api_key if self.api_key[k]])
-
+        self.api_key_mgr = ApiKeyManager()
+        self.config = load_config()
+        log.info("YAML config loaded", config_keys=list(self.config.keys()))
 
     def load_embeddings(self):
+        """
+        Load and return embedding model from Google Generative AI.
+        """
         try:
             model_name = self.config["embedding_model"]["model_name"]
-            log.info("Loading embedding model", model_name=model_name)
+            log.info("Loading embedding model", model=model_name)
             return HuggingFaceEmbeddings(model_name=model_name) #type: ignore
         except Exception as e:
             log.error("Error loading embedding model", error=str(e))
             raise DocumentPortalException("Failed to load embedding model", sys)
+
     def load_llm(self):
+        """
+        Load and return the configured LLM model.
+        """
         llm_block = self.config["llm"]
         provider_key = os.getenv("LLM_PROVIDER", "groq")
 
@@ -71,7 +107,7 @@ class ModelLoader:
         if provider == "google":
             return ChatGoogleGenerativeAI(
                 model=model_name,
-                google_api_key=self.api_key.get("GOOGLE_API_KEY"),
+                google_api_key=self.api_key_mgr.get("GOOGLE_API_KEY"),
                 temperature=temperature,
                 max_output_tokens=max_tokens
             )
@@ -79,7 +115,7 @@ class ModelLoader:
         elif provider == "groq":
             return ChatGroq(
                 model=model_name,
-                api_key=self.api_key.get("GROQ_API_KEY"), #type: ignore
+                api_key=self.api_key_mgr.get("GROQ_API_KEY"), #type: ignore
                 temperature=temperature,
             )
 
@@ -94,7 +130,6 @@ class ModelLoader:
         else:
             log.error("Unsupported LLM provider", provider=provider)
             raise ValueError(f"Unsupported LLM provider: {provider}")
-
 
 
 if __name__ == "__main__":

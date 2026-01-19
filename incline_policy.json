@@ -1,0 +1,36 @@
+{
+    "name of first policy": "AllowECSLogs",
+    "value of the first policy":{
+   "Version": "2012-10-17",
+   "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "*"
+    }
+   ]
+},
+
+    "name of second policy":"AllowSecretsPolicy",
+    "value of the second policy":{
+   "Version": "2012-10-17",
+   "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:DescribeSecret"
+      ],
+      "Resource": "*"
+    }
+   ]
+}
+
+
+}
+
+
