@@ -65,11 +65,11 @@ LLM (Groq / Gemini)
 
 ```mermaid
 flowchart TD
-    A[Client Upload (PDF, DOCX, TXT)] --> B[FastAPI Endpoint]
-    B --> C[FastAPI File Adapter]
-    C --> D[File IO Layer - utils file io]
-    D --> E[Session Based Storage (data session)]
-    E --> F[Document Loaders (PDF, DOCX, TXT)]
+    A[Client Upload] --> B[FastAPI Endpoint]
+    B --> C[FastAPI Adapter]
+    C --> D[File IO Layer]
+    D --> E[Session Storage]
+    E --> F[Document Loaders]
 
 ```
 
@@ -80,11 +80,12 @@ flowchart TD
 ```mermaid
 flowchart TD
     A[PDF Upload] --> B[Text Extraction]
-    B --> C[Prompt Builder (document_analysis)]
-    C --> D[LLM (Groq or Gemini)]
+    B --> C[Prompt Builder]
+    C --> D[Language Model]
     D --> E[JSON Output Parser]
-    E --> F[Pydantic Validation (Metadata Model)]
+    E --> F[Pydantic Validation]
     F --> G[Structured JSON Response]
+
 
 ```
 
@@ -110,13 +111,12 @@ with Markers]
 
 ```mermaid
 flowchart TD
-    A[User Uploads Documents] --> B[Chunking (size + overlap)]
+    A[User Uploads Documents] --> B[Chunking Size and Overlap]
     B --> C[Embedding Generation]
     C --> D[FAISS Vector Index]
-    D --> E[Retriever (Top-K)]
+    D --> E[Retriever Top K]
     E --> F[Contextual Prompt]
     F --> G[LLM Answer]
-
 ```
 
 ---
